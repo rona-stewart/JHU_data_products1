@@ -1,0 +1,86 @@
+---
+title: "My Munro Map"
+author: "Rona Stewart"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+The purpose of this R Markdown file is to create a web page with an interactive map using the Leaflet library in R.  Specifically, this site will depict all of the Munros in Scotland, their height, region, and ranking (in height and prominence terms).  
+
+### What is a Munro?
+A Munro is a distinct Scottish peak of 3000ft (914.4m) and over, of "sufficient separation" from neighbouring peaks. The list was originally drawn up by Sir H.T. Munro in the Scottish Mountaineering Club Journal in 1891 was unfinished at the time of his death. Munro did not write down a precise definition of what he meant by "sufficient separation", though the character of a mountain did enter into it. Through regular use these hills have become known as the Munros. The current list contains 282 peaks.
+
+
+### What does the map do?
+The map shows the location of the top of each Munro, colour coded by whether the author has climbed the hill or not.  When the tag is selected, it provides the height, prominence and relative ranking amongst the Munros for both. 
+
+### Generating the map
+```{r MunroMap}
+# First read the data in to R
+hills <- read.csv("C:\\Users\\rona_\\Documents\\Data_Science\\Module_9\\DoBIHdata.csv")
+
+# Then set up the Leaflet page and other required packages
+library(leaflet); library(dplyr); library(tidyr)
+
+# Add group colour as a factor variable to produce different coloured icons
+hills <- hills %>%
+  mutate(Group = case_when(
+    Climbed == "Yes" ~ "darkgreen",
+    Climbed == "No" ~ "red"),
+    group_color = as.factor(Group))
+
+# Set icons for climbed (green triangle) and not yet climbed (red triangle)
+my_icon <- iconList(
+                triangle_green <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/green-normal-triangle-png-8.png",
+                             iconWidth = 10, iconHeight = 10),
+               triangle_red <- makeIcon(iconUrl = "https://www.freeiconspng.com/uploads/red-triangle-png-20.png",
+                           iconWidth = 10, iconHeight = 10)
+)
+
+# Set pop-up text
+hills <- mutate(hills, popup = paste(Name, 
+                                paste("Height (m): ", Metres, sep=""),
+                                paste("Height (ft): ", Feet, sep=""),
+                                paste("Rank (height): ", height_rank, sep=""),
+                                paste("Prominence(m): ", prominence_m, sep=""),
+                                paste("Prominence(ft): ", prominence_ft, sep=""),
+                                paste("Rank (Prominence): ", prominence_rank, sep = ""),
+                                sep = "<br>"
+                                )
+                )
+
+#Create map with markers, popups and legend
+hills<- hills %>%
+        leaflet() %>%
+        addTiles() %>%
+        addMarkers(lat = hills$Latitude, lng = hills$Longitude,
+                   clusterOptions = markerClusterOptions(),
+                   icon = ~ my_icon[as.numeric(group_color)],
+                   popup = hills$popup) %>%
+        addLegend(labels = c("Climbed", "Not yet climbed"), 
+                  colors = c("darkgreen", "red"))
+
+# Launch the map
+hills
+
+```
+
+## Appendix 1: Data sources
+
+Database of British and Irish hills
+https://www.hills-database.co.uk/downloads.html
+
+Scottish Mountaineering Club
+https://www.smc.org.uk/
+
+WalkHighlands
+https://www.walkhighlands.co.uk/
+
+Wikipedia
+https://en.wikipedia.org/wiki/List_of_Munro_mountains
