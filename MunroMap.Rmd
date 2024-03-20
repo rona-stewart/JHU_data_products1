@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 ```
 
 ## Introduction
@@ -17,8 +17,8 @@ The purpose of this R Markdown file is to create a web page with an interactive 
 A Munro is a distinct Scottish peak of 3000ft (914.4m) and over, of "sufficient separation" from neighbouring peaks. The list was originally drawn up by Sir H.T. Munro in the Scottish Mountaineering Club Journal in 1891 was unfinished at the time of his death. Munro did not write down a precise definition of what he meant by "sufficient separation", though the character of a mountain did enter into it. Through regular use these hills have become known as the Munros. The current list contains 282 peaks.
 
 
-### What does the map do?
-The map shows the location of the top of each Munro, colour coded by whether the author has climbed the hill or not.  When the tag is selected, it provides the height, prominence and relative ranking amongst the Munros for both. 
+### What does the app do?
+The app provides some links in relation to Munros, alongside a map displaying the location of the top of each Munro, colour coded by whether the author has climbed the hill or not.  When the tag is selected, it provides the height, prominence and relative ranking amongst the Munros for both. 
 
 ### Generating the map
 ```{r MunroMap}
@@ -26,7 +26,9 @@ The map shows the location of the top of each Munro, colour coded by whether the
 hills <- read.csv("C:\\Users\\rona_\\Documents\\Data_Science\\Module_9\\DoBIHdata.csv")
 
 # Then set up the Leaflet page and other required packages
-library(leaflet); library(dplyr); library(tidyr)
+suppressPackageStartupMessages(library(leaflet))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
 
 # Add group colour as a factor variable to produce different coloured icons
 hills <- hills %>%
@@ -66,21 +68,32 @@ hills<- hills %>%
         addLegend(labels = c("Climbed", "Not yet climbed"), 
                   colors = c("darkgreen", "red"))
 
-# Launch the map
-hills
-
 ```
 
-## Appendix 1: Data sources
+### Generating the App
+```{r shinyapp}
+# Load shiny library
+suppressPackageStartupMessages(library(shiny))
 
-Database of British and Irish hills
-https://www.hills-database.co.uk/downloads.html
+# Define the server environment for the app
+function(input, output) {}
 
-Scottish Mountaineering Club
-https://www.smc.org.uk/
-
-WalkHighlands
-https://www.walkhighlands.co.uk/
-
-Wikipedia
-https://en.wikipedia.org/wiki/List_of_Munro_mountains
+# Define UI for application that shows a graph of Munros climbed
+fluidPage(
+            # Application title
+    titlePanel("My Munro Map"),
+    sidebarLayout(
+        sidebarPanel(
+                h6("Data as at: ",Sys.Date()),
+                helpText("Further information is available through: ", 
+                         br(),
+                         a("Database of British and Irish Hills", href = "https://www.hills-database.co.uk/downloads.html"),
+                        br(),
+                        a("Scottish Mountaineering Club" , href = "https://www.smc.org.uk/"), 
+                        br(), 
+                        a("WalkHighlands website", href = "https://www.walkhighlands.co.uk/"))),
+        mainPanel(
+                hills)
+                )
+        )
+```
